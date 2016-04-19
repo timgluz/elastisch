@@ -1,5 +1,5 @@
 language: clojure
-#sudo: true
+sudo: required
 services:
   - docker
 
@@ -7,14 +7,14 @@ env:
   matrix:
     - ES_VERSION="2.3.1"
   global:
-    - ES_URL="http://127.0.0.1:9200"
+    - ES_URL="http://127.0.0.1:9201"
     - ES_CLUSTER_NAME=elasticsearch
     - ES_CLUSTER_HOST="127.0.0.1"
 
 before_install:
   - "ulimit -u 4096"
   - docker pull elasticsearch:2.3.1
-  - docker run -d -p 127.0.0.1:9200:9200 -p 127.0.0.1:9300:9300 -v "$PWD/resources/config":/usr/share/elasticsearch/config elasticsearch:2.3.1 -Des.node.name="es-test" -Des.network.bind_host=0.0.0.0
+  - docker run -d -p 127.0.0.1:9201:9200 -p 127.0.0.1:9300:9300 -v "$PWD/resources/config":/usr/share/elasticsearch/config elasticsearch:2.3.1 -Des.node.name="es-test" -Des.network.bind_host=0.0.0.0
   - docker ps -a
   - "curl $ES_URL"
 
