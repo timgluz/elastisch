@@ -3,7 +3,6 @@ sudo: true
 services:
   - elasticsearch
 env:
-  - ENV=ci
   global:
     - ES_URL="http://127.0.0.1:9200"
     - ES_CLUSTER_NAME=elasticsearch
@@ -14,6 +13,8 @@ before_install:
   - "curl -O https://download.elastic.co/elasticsearch/release/org/elasticsearch/distribution/deb/elasticsearch/2.3.1/elasticsearch-2.3.1.deb && dpkg -i --force-confnew elasticsearch-2.3.1.deb"
   - "service elasticsearch restart"
   - "service elasticsearch status"
+  - "elasticsearch -v"
+  - "curl http://localhost:9200/"
 
 script: lein2 all test :ci
 jdk:
