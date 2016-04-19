@@ -1,5 +1,5 @@
 language: clojure
-sudo: true
+#sudo: true
 #services:
 #  - elasticsearch
 
@@ -18,7 +18,9 @@ before_install:
   - sleep 5
   - sudo service elasticsearch restart
   - sudo service elasticsearch status
-  - "curl http://localhost:9200"
+  - ls -la /usr/share/elasticsearch/bin/elasticsearch
+  - elasticsearch -v
+  - "curl $ES_URL"
 
 script: lein2 all test :ci
 jdk:
