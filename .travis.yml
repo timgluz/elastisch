@@ -14,11 +14,10 @@ env:
 before_install:
   - "ulimit -u 4096"
   - "curl -O https://download.elastic.co/elasticsearch/release/org/elasticsearch/distribution/deb/elasticsearch/2.3.1/elasticsearch-2.3.1.deb && sudo dpkg -i --force-confnew elasticsearch-2.3.1.deb && sudo service elasticsearch start"
-  - sleep 5
   - ls
-  - mkdir resources/logs
-  - elasticsearch -d --default.path.conf=resources/config --default.path.logs=resources/logs
-  - sleep 15
+  - "mkdir resources/logs"
+  - "elasticsearch -d --default.path.conf=resources/config --default.path.logs=resources/logs"
+  - sleep 5
   - elasticsearch -v 
   - "curl $ES_URL"
 
