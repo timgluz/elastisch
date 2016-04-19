@@ -18,7 +18,7 @@ before_install:
   - sleep 5
   - sudo service elasticsearch restart
   - sudo service elasticsearch status
-  - "curl $ES_URL"
+  - "curl http://localhost:9200"
 
 script: lein2 all test :ci
 jdk:
