@@ -1,7 +1,9 @@
 language: clojure
 sudo: true
-services:
-  - elasticsearch
+#deactive when travis stop using 1.4
+#services:
+#  - elasticsearch
+
 env:
   global:
     - ES_URL="http://127.0.0.1:9200"
