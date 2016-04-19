@@ -3,7 +3,9 @@ sudo: true
 services:
   - elasticsearch
 env:
+  - ES_URL="http://127.0.0.1:9200"
   - ES_CLUSTER_NAME=elasticsearch
+  - ES_CLUSTER_HOST="127.0.0.1"
 before_install:
   - "ulimit -u 4096"
   - "curl -O https://download.elastic.co/elasticsearch/release/org/elasticsearch/distribution/deb/elasticsearch/2.3.1/elasticsearch-2.3.1.deb"
