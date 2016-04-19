@@ -19,11 +19,11 @@
 (defn reset-indexes*
   []
   ;; deletes all indices
-  (idx/delete conn)
   (try
+    (idx/delete conn)
     (idx/delete-template conn "accounts")
     (catch Exception e
-      (println "fixtures: failed to delete template")
+      (println "fixtures: failed to delete indexes")
       (.printStackTrace e))))
 
 (defn reset-indexes
