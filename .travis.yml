@@ -7,15 +7,15 @@ services:
 env:
   - ES_VERSION="2.3.1"
 env.global:
-  - ES_URL="http://127.0.0.1:9200"
-  - ES_CLUSTER_HOST="127.0.0.1"
+  - ES_URL="http://localhost:9200"
+  - ES_CLUSTER_HOST="localhost"
 
 before_install:
   - docker pull elasticsearch:2.3.1
   - docker run -d -p 127.0.0.1:9200:9200 -p 127.0.0.1:9300:9300 -v "$PWD/resources/config":/usr/share/elasticsearch/config elasticsearch:2.3.1
   - docker ps -a
   - sleep 5
-  - curl -vvvv http://127.0.0.1:9200/_stats
+  - curl -vvvv http://localhost:9200/_stats
 
 script: "lein with-profile 1.8,dev test :rest"
 jdk:
