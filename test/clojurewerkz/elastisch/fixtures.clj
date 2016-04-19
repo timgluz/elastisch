@@ -16,7 +16,7 @@
 
 (def es-url (or (System/getenv "ES_URL")
                 (System/getenv "ELASTICSEARCH_URL")
-                "http://127.0.0.1:9200"))
+                "http://localhost:9200"))
 
 (def conn (es/connect es-url))
 
