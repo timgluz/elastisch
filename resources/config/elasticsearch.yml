@@ -6,6 +6,5 @@ node:
 script.inline: on
 script.indexed: on
 
-#comment out when on docker machine  
-#network:
-#  bind_host: "0.0.0.0"
+network:
+  bind_host: "0.0.0.0"
