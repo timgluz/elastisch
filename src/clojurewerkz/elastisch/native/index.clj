@@ -214,7 +214,7 @@
      (let [ft                        (es/admin-index-stats conn (cnv/->index-stats-request opts))
            ^IndicesStatsResponse res (.actionGet ft)]
        ;; TODO: convert stats into a map
-       res)))
+       (cnv/indices-stats-response->map res))))
 
 (defn segments
   "Returns segments information for one or more indices."

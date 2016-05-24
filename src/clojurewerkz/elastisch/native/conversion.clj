@@ -1271,6 +1271,10 @@
           {}
           (.getIndices r)))
 
+(defn ^IPersistentMap indices-stats-response->map
+  "transforms indices stats response to the Clojure hash-map"
+  [^IndicesStatsResponse r]
+  (json/parse-string (.toString r) true))
 
 (defn- apply-add-alias
   [^IndicesAliasesRequest req {:keys [index indices alias aliases filter]}]
