@@ -18,12 +18,11 @@
 
 (use-fixtures :each fx/reset-indexes)
 
-;; TODO: this errors against ES 2.2.x
 (let [conn (th/connect-native-client)]
   (deftest ^{:native true} test-count-with-the-default-query
     (let [index-name "people"
           index-type "person"]
-      (idx/create conn index-name :mappings fx/people-mapping)
+      (idx/create conn index-name {:mappings fx/people-mapping})
       (doc/create conn index-name index-type fx/person-jack)
       (doc/create conn index-name index-type fx/person-joe)
       (idx/refresh conn index-name)
@@ -33,7 +32,7 @@
   (deftest ^{:native true} test-count-with-a-term-query
     (let [index-name "people"
           index-type "person"]
-      (idx/create conn index-name :mappings fx/people-mapping)
+      (idx/create conn index-name {:mappings fx/people-mapping})
       (doc/create conn index-name index-type fx/person-jack)
       (doc/create conn index-name index-type fx/person-joe)
       (idx/refresh conn index-name)
@@ -42,12 +41,11 @@
            1 (doc/count conn index-name index-type (q/term :username "esjoe"))
            0 (doc/count conn index-name index-type (q/term :username "esmary")))))
 
-  ;;brokes
   (deftest ^{:native true} test-count-with-mixed-mappings
     (let [index-name "people"
           index-type "person"
           alt-index-type "altperson"]
-      (idx/create conn index-name :mappings fx/people-mapping)
+      (idx/create conn index-name {:mappings fx/people-mapping})
       (doc/create conn index-name index-type fx/person-jack)
       (doc/create conn index-name index-type fx/person-joe)
       (doc/create conn index-name "altperson" fx/person-jack)

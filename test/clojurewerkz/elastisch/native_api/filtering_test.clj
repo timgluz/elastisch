@@ -20,14 +20,13 @@
 (use-fixtures :each fx/reset-indexes fx/prepopulate-people-index
                     fx/prepopulate-articles-index fx/prepopulate-tweets-index)
 
-;; TODO: this errors against ES 2.2.x
 (let [conn (th/connect-native-client)]
   (deftest ^{:native true} test-term-filtering
     (let [index-name   "people"
           mapping-type "person"
           hits         (hits-from (doc/search conn index-name mapping-type
-                                              :query  (q/match-all)
-                                              :filter {:term {:username "esmary"}}))]
+                                              {:query  (q/match-all)
+                                               :filter {:term {:username "esmary"}}}))]
       (is (= 1 (count hits)))
       (is (= "Lindey" (-> hits first :_source :last-name)))))
 
@@ -35,7 +34,7 @@
     (let [index-name   "people"
           mapping-type "person"
           hits         (hits-from (doc/search conn index-name mapping-type
-                                              :query  (q/match-all)
-                                              :filter {:range {:age {:from 26 :to 30}}}))]
+                                              {:query  (q/match-all)
+                                               :filter {:range {:age {:from 26 :to 30}}}}))]
       (is (= 2 (count hits)))
       (is (#{28 29} (-> hits first :_source :age))))))

@@ -16,14 +16,13 @@
 
 (use-fixtures :each fx/reset-indexes)
 
-;; TODO: this errors against ES 2.2.x
 (let [conn (th/connect-native-client)]
   (deftest ^{:native true} test-updating-index-mapping
     (let [index    "people1"
           mapping  fx/people-mapping
           orig-mapping {:person {:properties {:first-name {:type "string" :store "yes"}}}}
-          _        (idx/create conn index :mappings orig-mapping)
-          response (idx/update-mapping conn index "person" :mapping mapping)]
+          _        (idx/create conn index {:mappings orig-mapping})
+          response (idx/update-mapping conn index "person" {:mapping mapping})]
       (is (resp/created-or-acknowledged? response))
       (is (get-in (idx/get-mapping conn index) [:people1 :mappings :person :properties :username :store]))))
 
@@ -31,6 +30,6 @@
   (deftest ^{:native true} test-updating-blank-index-mapping
     (let [index    "people3"
           mapping  fx/people-mapping
-          _        (idx/create conn index :mappings {})
-          response (idx/update-mapping conn index "person" :mapping mapping)]
+          _        (idx/create conn index {:mappings {}})
+          response (idx/update-mapping conn index "person" {:mapping mapping})]
       (is (resp/created-or-acknowledged? response)))))

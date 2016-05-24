@@ -9,17 +9,16 @@
 
 (use-fixtures :each fx/reset-indexes fx/prepopulate-articles-index)
 
-;; TODO: this errors against ES 2.2.x
-#_ (let [conn (th/connect-native-client)]
+(let [conn (th/connect-native-client)]
   (deftest ^{:native true :aggregation true} test-top-hits-aggregation
     (let [index-name   "articles"
           mapping-type "article"
           response     (doc/search conn index-name mapping-type
-                                   :query (q/match-all)
-                                   :aggregations
-                                   {:top-hits
-                                    {:top_hits {:sort [{:title {:order "asc"}}]
-                                                :size 4}}})
+                                   {:query (q/match-all)
+                                    :aggregations
+                                    {:top-hits
+                                     {:top_hits {:sort [{:title {:order "asc"}}]
+                                                 :size 4}}}})
           agg          (aggregation-from response :top-hits)]
       (is (= 4 (get-in agg [:hits :total])))
       (is (= 4 (count (get-in agg [:hits :hits])))))))
