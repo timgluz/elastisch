@@ -19,7 +19,7 @@ sure you have those two installed and then run tests against all supported Cloju
 * pull [Elasticsearch](https://hub.docker.com/_/elasticsearch/) image 
 
 ```
-$> docker pull elasticsearch:2.0.2
+$> docker pull elasticsearch:2.3.3
 ```
 nb! Tag must match with Elasticsearch version in the `project.clj`
 
@@ -31,7 +31,13 @@ manually tweak them.
 ```
 docker run -d -p 9200:9200 -p 9300:9300 --name="elastisch-test"  \
 	-v "$PWD/resources/config":/usr/share/elasticsearch/config   \
-	elasticsearch:2.0.2 \ 
+	elasticsearch:2.3.3 
+```
+
+* build image to test Elasticsearch Shield
+
+```
+docker build -f resources/Dockerfile --rm=true -t elastisch/shield:2.3.3 .
 ```
 
 * set environment variables
