@@ -19,6 +19,7 @@
   (:import [clojure.lang IPersistentList IPersistentMap]
            clojurewerkz.elastisch.rest.Connection))
 
+;;TODO: should use Spec here to add some protective Speck
 (defrecord ShieldUser
   [^String username
    ^String password
@@ -26,6 +27,17 @@
    ^String full_name
    ^String email
    ^IPersistentMap metadata])
+
+(defrecord ShieldRole
+  [^IPersistentList cluster
+   ^IPersistentList indices ;;list of ShieldRoleIndex
+   ^IPersistentList run_as])
+
+(defrecord ShieldRoleIndex
+  [^IPersistentList names
+   ^IPersistentList privileges
+   ^IPersistentList fields
+   ^IPersistentList query])
 
 (defn remove-empty-fields
   "removes dictionary items with nil or empty value"
@@ -48,6 +60,13 @@
     (init-user {:username username
                 :password password
                 :roles (vec roles)})))
+
+(defn init-role
+  "initializes a new native Shield role"
+  [clusters shield-indices]
+  (->ShieldRole clusters 
+                (vec (map #(map->ShieldRoleIndex %) shield-indices))
+                []))
 
 (defn add-user
   "creates a new native user.
@@ -79,6 +98,32 @@
   (rest-client/delete rest-conn
                       (rest-client/url-with-path rest-conn "_shield/user" user-name)
                       {:basic-auth ((juxt :username :password) shield-user)}))
+
+
+(defn add-role
+  "adds a new native Shield role
+  more details: https://www.elastic.co/guide/en/shield/current/defining-roles.html"
+  [^Connection rest-conn ^ShieldUser shield-user ^String role-name ^ShieldRole role]
+  (rest-client/post
+    rest-conn
+    (rest-client/url-with-path rest-conn "_shield/role" role-name)
+    {:basic-auth ((juxt :username :password) shield-user)
+     :body (remove-empty-fields role)}))
+
+(defn get-roles
+  "fetches a list of Shield roles"
+  [^Connection rest-conn ^ShieldUser shield-user]
+  (rest-client/get rest-conn
+                   (rest-client/url-with-path rest-conn "_shield/role")
+                   {:basic-auth ((juxt :username :password) shield-user)}))
+
+(defn delete-role
+  "deletes the role by its name"
+  [^Connection rest-conn ^ShieldUser shield-user ^String role-name]
+  (rest-client/delete rest-conn
+                      (rest-client/url-with-path rest-conn "_shield/role" role-name)
+                      {:basic-auth ((juxt :username :password) shield-user)}))
+
 
 (comment
   (require '[clojurewerkz.elastisch.rest :as rest-client] :reload)

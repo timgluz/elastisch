@@ -23,7 +23,7 @@
               :password "test123"
               :roles ["test_role"]})
 
-(deftest ^{rest true} test-CRUD-new-user
+(deftest ^{:rest true} test-CRUD-new-user
   (testing "returns empty list when no users added"
     (let [conn (rest-client/connect)
           res (shield/get-users conn es-admin)]
@@ -50,3 +50,35 @@
       (is (contains? res :found))
       (is (true? (:found res))))))
 
+
+(def new-role (shield/init-role ["all"]
+                                [{:names ["test_idx1"]
+                                  :privileges ["all"]}]))
+
+(deftest ^{:rest true} test-CRUD-new-role
+  (testing "returns empty dictionary if no roles"
+    (let [conn (rest-client/connect)
+          res (shield/get-roles conn es-admin)]
+      (is (true? (empty? res)))))
+
+  (testing "creates a new shield role"
+    (let [conn (rest-client/connect)
+          res (shield/add-role conn es-admin "test_role_1" new-role)]
+      (is (false? (empty? res)))
+      (is (contains? res :role))
+      (is (true? (get-in res [:role :created])))))
+
+  (testing "returns freshly created role"
+    (let [conn (rest-client/connect)
+          res (shield/get-roles conn es-admin)]
+      (is (false? (empty? res)))
+      (is (contains? res :test_role_1))
+      (is (= ["test_idx1"]
+             (-> res :test_role_1 :indices first :names)))))
+
+  (testing "deletes the created role"
+    (let [conn (rest-client/connect)
+          res (shield/delete-role conn es-admin "test_role_1")]
+      (is (false? (empty? res)))
+      (is (contains? res :found))
+      (is (true? (:found res))))))
