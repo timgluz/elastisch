@@ -32,6 +32,16 @@
         (is (contains? res :cluster_name))
         (is (= "shield-test" (:cluster_name res)))))))
 
+(deftest ^{:shield true} test-user-authenticate-api
+  (let [conn (shield/connect-rest (:username es-admin) (:password es-admin))]
+    (testing "returns expected response for authorized user"
+      (let [res (shield/authenticate conn)]
+        (is (false? (empty? res)))
+        (is (contains? res :username))
+        (is (= (:username es-admin) (:username res)))
+        (is (contains? res :roles))
+        (is (= ["admin"] (:roles res)))))))
+
 (deftest ^{:shield true} test-CRUD-new-user
   (let [conn (shield/connect-rest (:username es-admin) (:password es-admin))]
     (testing "returns empty list when no users added"

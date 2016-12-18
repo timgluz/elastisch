@@ -72,12 +72,21 @@
   (->ShieldRole clusters 
                 (vec (map #(map->ShieldRoleIndex %) shield-indices))
                 []))
+
+
 (defn info
   "returns a basic information about the Shield"
   [rest-conn]
   (rest-client/get rest-conn
                    (rest-client/url-with-path rest-conn "_shield")))
 
+(defn authenticate
+  "submits a request with basic auth header and returns information about authorized user"
+  [rest-conn]
+  (rest-client/get rest-conn
+                   (rest-client/url-with-path rest-conn "_shield/authenticate")))
+
+;;-- USER endpoints -----------------------------------------------------------
 (defn add-user
   "creates a new native user.
   Params:
@@ -170,6 +179,8 @@
   (radmin/cluster-health srconn)
 
   (shield/info srconn)
+  (shield/authenticate srconn)
+
   (shield/add-user srconn shield-user test-user)
   (shield/get-users srconn)
   (shield/get-users srconn ["es_test"]) 
