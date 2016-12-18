@@ -72,6 +72,11 @@
   (->ShieldRole clusters 
                 (vec (map #(map->ShieldRoleIndex %) shield-indices))
                 []))
+(defn info
+  "returns a basic information about the Shield"
+  [rest-conn]
+  (rest-client/get rest-conn
+                   (rest-client/url-with-path rest-conn "_shield")))
 
 (defn add-user
   "creates a new native user.
@@ -147,7 +152,8 @@
        tc)))
 
 (comment
-  (require '[clojurewerkz.elastisch.rest :as rest-client] :reload)
+  ;example workflow
+
   (require '[clojurewerkz.elastisch.shield :as shield] :reload)
   
   (def shield-user (shield/init-user "es_admin" "toor123"))
@@ -163,6 +169,7 @@
   (require '[clojurewerkz.elastisch.rest.admin :as radmin])
   (radmin/cluster-health srconn)
 
+  (shield/info srconn)
   (shield/add-user srconn shield-user test-user)
   (shield/get-users srconn)
   (shield/get-users srconn ["es_test"]) 
