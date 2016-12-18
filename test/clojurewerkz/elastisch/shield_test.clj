@@ -42,6 +42,21 @@
         (is (contains? res :roles))
         (is (= ["admin"] (:roles res)))))))
 
+(deftest ^{:shield true} test-clear-cache-api
+  (let [conn (shield/connect-rest (:username es-admin) (:password es-admin))]
+    (testing "clears the cache of default realm"
+      (let [res (shield/clear-cache conn)]
+        (is (false? (empty? res)))
+        (is (= (contains? res :cluster_name)))))
+    (testing "clears the cache of the specified realm"
+      (let [res (shield/clear-cache conn ["default"])]
+        (is (false? (empty? res)))
+        (is (= (contains? res :cluster_name)))))
+    (testing "clears the cache of the user on the specified realm"
+      (let [res (shield/clear-cache conn ["default"] [(:username es-admin)])]
+        (is (false? (empty? res)))
+        (is (= (contains? res :cluster_name)))))))
+
 (deftest ^{:shield true} test-CRUD-new-user
   (let [conn (shield/connect-rest (:username es-admin) (:password es-admin))]
     (testing "returns empty list when no users added"

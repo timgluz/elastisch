@@ -86,6 +86,22 @@
   (rest-client/get rest-conn
                    (rest-client/url-with-path rest-conn "_shield/authenticate")))
 
+(defn clear-cache
+  "evicts users from the user cache"
+  ([^Connection rest-conn]
+    (clear-cache rest-conn ["default"] nil))
+  ([^Connection rest-conn ^IPersistentList realm-names]
+    (clear-cache rest-conn realm-names nil))
+  ([^Connection rest-conn ^IPersistentList realm-names ^IPersistentList usernames]
+    (let [endpoint-uri (rest-client/url-with-path
+                         rest-conn
+                         "_shield/realm"
+                         (string/join "," realm-names)
+                         "_clear_cache"
+                         (when-not (empty? usernames)
+                          (str "?usernames=" (string/join "," usernames))))]
+      (rest-client/post rest-conn endpoint-uri))))
+
 ;;-- USER endpoints -----------------------------------------------------------
 (defn add-user
   "creates a new native user.
@@ -180,6 +196,7 @@
 
   (shield/info srconn)
   (shield/authenticate srconn)
+  (shield/clear-cache srconn)
 
   (shield/add-user srconn shield-user test-user)
   (shield/get-users srconn)
