@@ -28,7 +28,6 @@
       (let [res (shield/info conn)]
         (is (false? (empty? res)))
         (is (contains? res :status))
-        (is (= "enabled" (:status res)))
         (is (contains? res :cluster_name))
         (is (= "shield-test" (:cluster_name res)))))))
 
@@ -41,6 +40,24 @@
         (is (= (:username es-admin) (:username res)))
         (is (contains? res :roles))
         (is (= ["admin"] (:roles res)))))))
+
+(deftest ^{:shield true} test-license-api
+  (let [conn (shield/connect-rest (:username es-admin) (:password es-admin))]
+    (testing "returns details of currently installed license"
+      (let [res (shield/get-license conn)]
+        (is (false? (empty? res)))
+        (is (contains? res :license))
+        (is (contains? (get res :license) :status)))
+
+    ;;NB! must update fixture every year on 18th December
+    (testing "updates current license"
+      (let [lic-file (slurp "resources/elastisch-shield-license-v2.json")
+            res (shield/update-license conn lic-file)]
+        (is (false? (empty? res)))
+        (is (contains? res :acknowledged))
+        (is (true? (:acknowledged res)))
+        (is (contains? res :license_status))
+        (is (= "valid" (:license_status res))))))))
 
 (deftest ^{:shield true} test-clear-cache-api
   (let [conn (shield/connect-rest (:username es-admin) (:password es-admin))]

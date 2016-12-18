@@ -61,10 +61,19 @@
         (http/post (merge (.http-opts conn)
                           options
                           {:accept :json
-                           ;:throw-exceptions false ;;ables to see ES when debugging
                            :body (json/encode body)}))
         (:body)
         (parse-safely))))
+
+(defn post-raw
+  "post the raw body with out encoding it to json"
+  [^Connection conn ^String uri {:keys [body] :as options}]
+    (-> uri
+        (http/post (merge (.http-opts conn)
+                          {:accept :json}
+                          options))
+        (:body)
+        (parse-safely)))
 
 (defn put
   [^Connection conn ^String uri {:keys [body] :as options}]

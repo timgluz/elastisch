@@ -102,6 +102,24 @@
                           (str "?usernames=" (string/join "," usernames))))]
       (rest-client/post rest-conn endpoint-uri))))
 
+;;-- LICENSE endpoints --------------------------------------------------------
+
+(defn get-license
+  "returns details  of currently installed ES license"
+  [^Connection rest-conn]
+  (rest-client/get rest-conn (rest-client/url-with-path rest-conn "_license")))
+
+
+(defn update-license
+  "uploads or re-uploads a the ES license"
+  [^Connection rest-conn ^String license-content]
+  (rest-client/post-raw rest-conn
+                        (rest-client/url-with-path rest-conn "_license")
+                        {:query-params {:acknowledge true}
+                         :content-type :json
+                         :body (str license-content)}))
+
+
 ;;-- USER endpoints -----------------------------------------------------------
 (defn add-user
   "creates a new native user.
@@ -179,7 +197,7 @@
 (comment
   ;example workflow
 
-  (require '[clojurewerkz.elastisch.shield :as shield] :reload)
+  (require '[clojurewerkz.elastisch.shield :as shield] :reload-all)
   
   (def shield-user (shield/init-user "es_admin" "toor123"))
   ;using shield end-points
@@ -197,6 +215,11 @@
   (shield/info srconn)
   (shield/authenticate srconn)
   (shield/clear-cache srconn)
+  (shield/get-license srconn)
+
+  (require '[clojure.java.io :as io])
+  (def lic-file (slurp "resources/elastisch-shield-license-v2.json"))
+  (shield/update-license srconn lic-file)
 
   (shield/add-user srconn shield-user test-user)
   (shield/get-users srconn)
