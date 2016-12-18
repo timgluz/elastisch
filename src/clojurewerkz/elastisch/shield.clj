@@ -15,9 +15,14 @@
 
 (ns clojurewerkz.elastisch.shield
   (:require [clojure.string :as string]
-            [clojurewerkz.elastisch.rest :as rest-client])
+            [clojurewerkz.elastisch.rest :as rest-client]
+            [clojurewerkz.elastisch.native.conversion :as cnv])
+
   (:import [clojure.lang IPersistentList IPersistentMap]
-           clojurewerkz.elastisch.rest.Connection))
+           clojurewerkz.elastisch.rest.Connection
+           org.elasticsearch.client.Client
+           org.elasticsearch.client.transport.TransportClient
+           org.elasticsearch.shield.ShieldPlugin))
 
 ;;TODO: should use Spec here to add some protective Speck
 (defrecord ShieldUser
@@ -71,73 +76,107 @@
 (defn add-user
   "creates a new native user.
   Params:
-  @rest-client - initialized elastisch REST-client 
+  @rest-client - initialized elastisch shielded REST-client 
   @username  - string, 1 < len < 30
   @password  - string, 6 < len
   @roles     - vector, 1 < len"
-  ([^Connection rest-conn ^ShieldUser shield-user ^ShieldUser new-user]
+  ([^Connection rest-conn ^ShieldUser new-user]
     (let [shield-uri (rest-client/url-with-path rest-conn "_shield/user" (:username new-user))]
       (rest-client/post rest-conn
                         shield-uri
-                        {:basic-auth ((juxt :username :password) shield-user)
-                         :body (remove-empty-fields (dissoc new-user :username))
+                        {:body (remove-empty-fields (dissoc new-user :username))
                          :throw-exceptions false}))))
 
 (defn get-users
-  ([^Connection rest-conn ^ShieldUser shield-user]
+  ([^Connection rest-conn]
     (rest-client/get rest-conn
-                     (rest-client/url-with-path rest-conn "_shield/user")
-                     {:basic-auth ((juxt :username :password) shield-user)}))
-  ([^Connection rest-conn ^ShieldUser shield-user ^IPersistentList user-names]
+                     (rest-client/url-with-path rest-conn "_shield/user")))
+  ([^Connection rest-conn ^IPersistentList user-names]
     (rest-client/get rest-conn
-                     (rest-client/url-with-path rest-conn "_shield/user" (string/join "," user-names))
-                     {:basic-auth ((juxt :username :password) shield-user)})))
+                     (rest-client/url-with-path rest-conn "_shield/user" (string/join "," user-names)))))
 
 (defn delete-user
-  [^Connection rest-conn ^ShieldUser shield-user ^String user-name]
+  [^Connection rest-conn ^String user-name]
   (rest-client/delete rest-conn
-                      (rest-client/url-with-path rest-conn "_shield/user" user-name)
-                      {:basic-auth ((juxt :username :password) shield-user)}))
-
+                      (rest-client/url-with-path rest-conn "_shield/user" user-name)))
 
 (defn add-role
   "adds a new native Shield role
   more details: https://www.elastic.co/guide/en/shield/current/defining-roles.html"
-  [^Connection rest-conn ^ShieldUser shield-user ^String role-name ^ShieldRole role]
+  [^Connection rest-conn ^String role-name ^ShieldRole role]
   (rest-client/post
     rest-conn
     (rest-client/url-with-path rest-conn "_shield/role" role-name)
-    {:basic-auth ((juxt :username :password) shield-user)
-     :body (remove-empty-fields role)}))
+    {:body (remove-empty-fields role)}))
 
 (defn get-roles
   "fetches a list of Shield roles"
-  [^Connection rest-conn ^ShieldUser shield-user]
+  [^Connection rest-conn]
   (rest-client/get rest-conn
-                   (rest-client/url-with-path rest-conn "_shield/role")
-                   {:basic-auth ((juxt :username :password) shield-user)}))
+                   (rest-client/url-with-path rest-conn "_shield/role")))
 
 (defn delete-role
   "deletes the role by its name"
-  [^Connection rest-conn ^ShieldUser shield-user ^String role-name]
+  [^Connection rest-conn ^String role-name]
   (rest-client/delete rest-conn
-                      (rest-client/url-with-path rest-conn "_shield/role" role-name)
-                      {:basic-auth ((juxt :username :password) shield-user)}))
+                      (rest-client/url-with-path rest-conn "_shield/role" role-name)))
 
+
+(defn ^Client connect-rest
+  ([^String username ^String password]
+    (connect-rest (rest-client/default-url) username password {}))
+  ([^String uri ^String username ^String password]
+    (connect-rest uri username password {}))
+  ([^String uri ^String username ^String password ^IPersistentMap opts]
+    (rest-client/connect uri 
+                         (merge {:basic-auth [username password]} opts))))
+
+(defn ^Client connect-native
+  "Connects to one or more shielded Elasticsearch cluster nodes using
+  TCP/IP communication transport. Returns the client."
+  ([^IPersistentList pairs ^String username ^String password]
+    (connect-native pairs username password {}))
+  ([^IPersistentList pairs ^String username ^String password ^IPersistentMap settings]
+     (let [settings-with-auth (assoc settings "shield.user" (str username ":" password))
+           tcb (doto (TransportClient/builder)
+                 (.addPlugin ShieldPlugin)
+                 (.settings (cnv/->settings settings-with-auth)))
+           tc (.build tcb)]
+       (doseq [[host port] pairs]
+         (.addTransportAddress tc (cnv/->socket-transport-address host port)))
+       tc)))
 
 (comment
   (require '[clojurewerkz.elastisch.rest :as rest-client] :reload)
-
-  (def conn (rest-client/connect))
-
   (require '[clojurewerkz.elastisch.shield :as shield] :reload)
+  
   (def shield-user (shield/init-user "es_admin" "toor123"))
+  ;using shield end-points
   (println shield-user)
-
   (def test-user (shield/init-user "es_test" "qwerty123" ["test"]))
 
-  (shield/add-user conn shield-user test-user)
-  (shield/get-users conn shield-user)
-  (shield/get-users conn shield-user ["es_test"]) 
-  (shield/delete-user conn shield-user (:username test-user)) 
+  ;using rest-client to make authorized calls
+  (def srconn (shield/connect-rest
+                "http://127.0.0.1:9200"
+                (:username shield-user)
+                (:password shield-user)))
+  (require '[clojurewerkz.elastisch.rest.admin :as radmin])
+  (radmin/cluster-health srconn)
+
+  (shield/add-user srconn shield-user test-user)
+  (shield/get-users srconn)
+  (shield/get-users srconn ["es_test"]) 
+  (shield/delete-user srconn (:username test-user)) 
+
+  
+  ;;using native client to make authorized calls
+  (def sconn (shield/connect-native  [["127.0.0.1" 9300]]
+                                     (:username shield-user)
+                                     (:password shield-user)
+                                     {"cluster.name" "shield-test"}))
+
+  (require '[clojurewerkz.elastisch.native.index :as index])
+  (index/create sconn "testindex")
+  (index/stats sconn)
+
   )

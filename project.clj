@@ -7,7 +7,10 @@
                  [clj-http              "2.2.0" :exclusions [org.clojure/clojure]]
                  [clojurewerkz/support  "1.1.0" :exclusions [com.google.guava/guava]]
                  ;; used by the native client
-                 [org.elasticsearch/elasticsearch "2.3.3"]]
+                 [org.elasticsearch/elasticsearch "2.3.3"]
+                 ;; used by shielded native client
+                 [org.elasticsearch.plugin/shield "2.3.3"]]
+
   :min-lein-version "2.5.1"
   :profiles     {:dev {:resource-paths ["test/resources"]
                        :dependencies [[clj-time "0.11.0" :exclusions [org.clojure/clojure]]]
@@ -28,7 +31,10 @@
                                      :releases {:checksum :fail :update :always}}
                  "sonatype-snapshots" {:url "http://oss.sonatype.org/content/repositories/snapshots"
                                        :snapshots true
-                                       :releases {:checksum :fail :update :always}}}
+                                       :releases {:checksum :fail :update :always}}
+                 "elastic" {:url "https://maven.elasticsearch.org/releases"
+                            :snapshots true
+                            :releases {:checksum :fail :update :always}}}
   :global-vars {*warn-on-reflection* true}
   :test-selectors {:focus       :focus
                    :indexing    :indexing
@@ -39,11 +45,13 @@
                    :snapshots   :snapshots
                    :native      :native
                    :rest        :rest
+                   :shield      :shield
                    :version-dependent :version-dependent
                    :all         (constantly true)
                    :default     (fn [m] (not (or (:version-dependent m)
                                                  (:scripting m)
-                                                 (:plugin m))))
+                                                 (:plugin m)
+                                                 (:shield m))))
                    :ci          (fn [m] (and (not (:native m))
                                              (not (:version-dependent m))))}
   :mailing-list {:name "clojure-elasticsearch"

@@ -23,7 +23,7 @@
 (defrecord Connection
     [^String uri ^IPersistentMap http-opts])
 
-(defn ^:private default-url
+(defn default-url
   []
   (or (System/getenv "ELASTICSEARCH_URL")
       (System/getenv "ES_URL")
